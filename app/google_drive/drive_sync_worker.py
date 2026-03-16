@@ -3,7 +3,7 @@ import logging
 import time
 
 from sqlalchemy import Engine
-from app.constants import  ART_AND_CRAFT_NAME, CAFE_NAME, DALA_SHOP_NAME, SHOPS, TIME_INTERVAL_MINUTE
+from app.constants import   SHOPS, TIME_INTERVAL_MINUTE
 from app.core.config import Database
 from app.db.schemes import InventoryUpdateRepository
 from app.google_drive.client import GoogleDriveClient, SpreadSheetClient

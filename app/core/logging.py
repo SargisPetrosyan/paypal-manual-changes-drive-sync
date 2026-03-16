@@ -13,7 +13,6 @@ def setup_logger() -> None:
         filemode="w",
         force=True,
     )
-
     # Creating an object
     logger: logging.Logger = logging.getLogger()
 
