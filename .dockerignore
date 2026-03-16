@@ -1,0 +1,5 @@
+test_data/
+.env
+*.yaml
+app/creds/google/credentials.json
+app/creds/google/token.json
