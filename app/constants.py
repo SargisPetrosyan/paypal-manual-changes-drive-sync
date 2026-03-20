@@ -63,7 +63,7 @@ ART_AND_CRAFT_NAME:str = "art"
 CAFE_NAME:str = "cafe"
 
 SHOPS:tuple = (DALA_SHOP_NAME,ART_AND_CRAFT_NAME,CAFE_NAME)
-TIME_INTERVAL_MINUTE:int = 30
+TIME_INTERVAL_MINUTE:int = 360
 
 DRIVE_SCOPES: list[str] = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -81,4 +81,5 @@ PAYPAL_GRANT_TYPE="urn:ietf:params:oauth:grant-type:jwt-bearer"
 PAYPAL_AUTH_URL= "https://oauth.zettle.com/token"
 PAYPAL_HEADERS= "application/x-www-form-urlencoded"
 
+PREVIOUS_HOUR_INTERVAL_MINUTE:int = 60
 

@@ -2,13 +2,16 @@ test_data/
 .env
 *.yaml
 app/creds/google/credentials.json
-app/creds/google/token.json
-.git
+test.py
 
 # Python cache
 __pycache__/
 *.py[cod]
 *$py.class
+.mypy_cache/
+.ruff_cache
+pyproject.toml
+uv.lock
 
 # Virtual environments
 venv/

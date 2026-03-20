@@ -118,9 +118,7 @@ async def json_to_dict(request:Request)-> dict:
     data["payload"] = json.loads(data["payload"])
     return data
 
-def any_to_cet(date:datetime) -> datetime:
-    SWEDEN_TIMEZONE: datetime = date.astimezone(pytz.timezone(SWEDEN_TIMEZONE_NAME))
-    return SWEDEN_TIMEZONE
+
 
 def get_folder_id_by_shop_id(shop_id:str):
     dala_shop_organization_id: str = os.environ['DALA_ORGANIZATION_UUID']
@@ -142,10 +140,15 @@ def extract_row_from_notation(response:RowEditResponse) -> int:
     return row
 
 
-def time_offset() -> timedelta:
-    stockholm_tz = pytz.timezone('Europe/Stockholm')
-    return stockholm_tz.utcoffset(datetime.now())
+def any_to_utc_time(date:datetime) -> datetime:
+    utc_time: datetime = date.astimezone(pytz.utc)
+    return utc_time
+    
 
+def any_to_sweden_time(date:datetime) -> datetime:
+    sweden_time: datetime = date.astimezone(pytz.timezone(SWEDEN_TIMEZONE_NAME))
+    return sweden_time
+    
 def if_paypal_token_valid(expiration_date:datetime) -> bool:
     if datetime.now() > expiration_date:
         return False

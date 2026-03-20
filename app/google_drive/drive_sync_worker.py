@@ -1,9 +1,8 @@
-from datetime import datetime, timedelta
 import logging
 import time
 
 from sqlalchemy import Engine
-from app.constants import   SHOPS, TIME_INTERVAL_MINUTE
+from app.constants import  SHOPS
 from app.core.config import Database
 from app.db.schemes import InventoryUpdateRepository
 from app.google_drive.client import GoogleDriveClient, SpreadSheetClient
@@ -14,6 +13,7 @@ from app.google_drive.services import DriveFileStructureEnsurer
 from app.google_drive.sheet_manager import SpreadSheetFileManager
 from app.models.product import PaypalProductData
 from app.zettle.services import InventoryManualDataCollector
+import datetime
 
 
 logger: logging.Logger = logging.getLogger(name=__name__)
@@ -28,22 +28,14 @@ class HourlyWorkflowRunner:
         self.spreadsheet_manager = SpreadSheetFileManager(client=self.spreadsheet_file_client)
 
     def run(self):
-        
-        start_date: datetime = datetime.now()
-        end_date: datetime = start_date - timedelta(minutes=TIME_INTERVAL_MINUTE)
-        # start_date: datetime = datetime.strptime("2026-01-13 12:36:22","%Y-%m-%d %H:%M:%S") #temporary
-        # end_date: datetime = datetime.strptime("2026-01-13 16:00:00","%Y-%m-%d %H:%M:%S")
-        logger.info(f"start checking manual changes start_date:{start_date}, end date 'end_date'")
-        logger.info(msg=f"check manual changes for interval start:'{start_date}', end:'{end_date}'")
-
+        utc_time =datetime.datetime.now(tz=datetime.timezone.utc)
         repo_updater: InventoryUpdateRepository = InventoryUpdateRepository(engine=self.engine)
         
         for name in self.shops:
             logger.info(f"check manual changes for '{name}'")
 
             manual_collector = InventoryManualDataCollector(
-                start_date= start_date, 
-                end_date= end_date, 
+                utc_time=utc_time,
                 repo_updater=repo_updater,
                 shop_name=name,
 )
@@ -52,7 +44,7 @@ class HourlyWorkflowRunner:
             list_of_manual_products: list[PaypalProductData] | None = manual_collector.get_manual_changed_products()
 
             if not list_of_manual_products:
-                logger.info(f"there is no manual changes for date interval start:{start_date}, end:{end_date}")
+                logger.info(f"there is no manual changes for  this date interval start:")
                 continue
 
             for product in list_of_manual_products:

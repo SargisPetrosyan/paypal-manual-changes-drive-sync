@@ -2,6 +2,7 @@ import os.path
 from app.constants import DRIVE_SCOPES
 
 from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import InstalledAppFlow
 from google.oauth2.credentials import Credentials
 from google.auth.external_account_authorized_user import (
     Credentials as ExternalAccountAuthorized,
@@ -18,6 +19,9 @@ def get_drive_credentials() -> Credentials:
     TOKEN_PATH: str = os.path.abspath(
         path=os.path.join(BASE_DIR, "../../app/creds/google/token.json")
     )
+    CREDS_PATH:str = os.path.abspath(
+        path=os.path.join(BASE_DIR, "../../app/creds/google/credentials.json")
+    )
     creds: Credentials | ExternalAccountAuthorized | None = None
 
     if os.path.exists(path=TOKEN_PATH):
@@ -32,6 +36,17 @@ def get_drive_credentials() -> Credentials:
             creds.refresh(request=Request())
             with open(TOKEN_PATH, "w") as token:
                 token.write(creds.to_json())  # type: ignore
+        if not creds:
+            flow: InstalledAppFlow = InstalledAppFlow.from_client_secrets_file(
+                client_secrets_file=CREDS_PATH, scopes=DRIVE_SCOPES
+            )
+            creds = flow.run_local_server(port=0)
+            # Save the credentials for the next run
+            with open(file=TOKEN_PATH, mode="w") as token:
+                token.write(creds.to_json())
+
         else:
             raise ValueError("google Token is not valid")
     return creds  # type: ignore
+
+

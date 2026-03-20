@@ -4,13 +4,14 @@ from typing import Any, Sequence
 from uuid import UUID
 from pydantic import ValidationError
 from sqlalchemy import Engine
+from app.constants import PREVIOUS_HOUR_INTERVAL_MINUTE, TIME_INTERVAL_MINUTE
 from app.db.schemes import InventoryUpdateRepository
 from app.models.inventory import InventoryUpdateData,InventoryBalanceUpdateValidation, Payload
 from app.models.product import PaypalProductData,ProductData,ListOfPurchases
 from app.zettle.data_fetchers import ProductDataFetcher, PurchasesFetcher
 from datetime import datetime, timedelta
 from app.db.models import InventoryBalanceUpdateModel
-from app.utils import PaypalTokenData, any_to_cet, time_offset
+from app.utils import PaypalTokenData, any_to_sweden_time
 
 import logging
 
@@ -20,12 +21,9 @@ logger: logging.Logger = logging.getLogger(name=__name__)
 class InventoryUpdatesDataJoiner:
     def __init__(
             self,
-            inventory_changes:Sequence[InventoryBalanceUpdateModel],
-            start_date:datetime,end_date:datetime) -> None:
+            inventory_changes:Sequence[InventoryBalanceUpdateModel]) -> None:
         
         self.inventory_changes:Sequence[InventoryBalanceUpdateModel] = inventory_changes
-        self.start_date: datetime =start_date
-        self.end_date:datetime = end_date
         self._inventory_update_joined:dict[tuple[UUID,UUID], InventoryUpdateData] = {}
     
     def join_inventory_update_data(self) -> dict[tuple[UUID,UUID], InventoryUpdateData]:
@@ -45,9 +43,7 @@ class InventoryUpdatesDataJoiner:
         return self._inventory_update_joined
     
 class PurchaseDataJoiner:
-    def __init__(self,start_date:datetime,end_date:datetime):
-        self.start_date: datetime =start_date
-        self.end_date:datetime = end_date
+    def __init__(self):
         self._purchases_joined:dict[tuple[UUID,UUID], int ] = {}
 
     
@@ -82,8 +78,12 @@ class InventoryManualChangesChecker:
         logger.info("get manual changes comparing purchases and db result")
         for purchase, value in self.marge_purchases_update.items():
             self.marge_inventory_update[purchase].updated_value = self.marge_inventory_update[purchase].updated_value + value
-            if self.marge_inventory_update[purchase].stock == self.marge_inventory_update[purchase].updated_value:
-                del self.marge_inventory_update[purchase]
+            try:
+                if self.marge_inventory_update[purchase].stock == self.marge_inventory_update[purchase].updated_value:
+                    del self.marge_inventory_update[purchase]
+            except KeyError:
+                logger.critical(msg="database has missing data")
+                raise ValueError("database has missing value")
         return self.marge_inventory_update
             
 
@@ -150,17 +150,15 @@ class InventoryManualDataCollector:
     def __init__(
             self,repo_updater:InventoryUpdateRepository, 
             shop_name:str, 
-            start_date:datetime, 
-            end_date:datetime,) -> None:
+            utc_time:datetime,) -> None:
         
         self.shop_name: str = shop_name
         self.paypal_token = PaypalTokenData(shop_name=self.shop_name)
         self.purchase_fetcher:PurchasesFetcher = PurchasesFetcher(token_data=self.paypal_token)
         self.repo_updater:InventoryUpdateRepository = repo_updater
         self._purchases_joined_joined:dict[frozenset[UUID], int] = {}
-        self.start_date: datetime = start_date
-        self.end_date:datetime = end_date
-        self.utc_offset: timedelta = time_offset()
+        self.start_date: datetime = utc_time - (timedelta(minutes=PREVIOUS_HOUR_INTERVAL_MINUTE) + timedelta(minutes=TIME_INTERVAL_MINUTE))
+        self.end_date:datetime =  utc_time -  timedelta(minutes=PREVIOUS_HOUR_INTERVAL_MINUTE)
 
     def get_manual_changed_products(self) -> list[PaypalProductData] | None:
         
@@ -170,31 +168,25 @@ class InventoryManualDataCollector:
 
         #fetch inventory data from database
         inventory_updates: Sequence[InventoryBalanceUpdateModel] = self.repo_updater.fetch_data_by_date_interval(
-            start_date=self.start_date,
-            end_date=self.end_date)
+            start_date=any_to_sweden_time(self.start_date),
+            end_date=any_to_sweden_time(self.end_date))
         
         if not inventory_updates:
-            logger.info(f"other was not any changes for time interval start:'{self.start_date}', end:'{self.end_date}'")
+            logger.info(f"other was not any changes for time interval start:'{any_to_sweden_time(self.start_date)}', end:'{any_to_sweden_time(self.end_date)}'")
             return None
         
         # inventory update data joining
-        inventory_data_joiner = InventoryUpdatesDataJoiner(
-            inventory_changes=inventory_updates,
-            start_date=self.start_date,
-            end_date=self.end_date)
+        inventory_data_joiner = InventoryUpdatesDataJoiner(inventory_changes=inventory_updates)
         
         inventory_data_joined: dict[tuple[UUID,UUID], InventoryUpdateData] = inventory_data_joiner.join_inventory_update_data()
 
         # purchases data joining
-        purchases_joiner = PurchaseDataJoiner(
-            start_date=self.start_date,
-            end_date=self.end_date)
-        
+        purchases_joiner = PurchaseDataJoiner()
         
         # get purchases by time interval
         purchases: dict[Any,Any] = self.purchase_fetcher.get_purchases(
-            start_date=self.start_date - self.utc_offset,
-            end_date=self.end_date - self.utc_offset,
+            start_date=self.start_date,
+            end_date=self.end_date,
         )
         try:
             validate_purchases:ListOfPurchases = ListOfPurchases.model_validate(obj=purchases)
