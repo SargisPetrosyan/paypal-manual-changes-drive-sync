@@ -1,6 +1,7 @@
 import logging
 import time
 
+import rich
 from sqlalchemy import Engine
 from app.constants import  SHOPS
 from app.core.config import Database
@@ -42,9 +43,8 @@ class HourlyWorkflowRunner:
 
             # step 1 filter changed product data
             list_of_manual_products: list[PaypalProductData] | None = manual_collector.get_manual_changed_products()
-
             if not list_of_manual_products:
-                logger.info(f"there is no manual changes for  this date interval start:")
+                logger.info(f"there is no manual changes for  this date interval ")
                 continue
 
             for product in list_of_manual_products:

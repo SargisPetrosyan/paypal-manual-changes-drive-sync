@@ -8,7 +8,7 @@ import logging
 
 def setup_logger() -> None:
     logging.basicConfig(
-        filename="logs/drive_updater_logs.log",
+        filename="app/logs/drive_updater_logs.log",
         format="%(asctime)s,%(msecs)03d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
         filemode="a",
         force=True,

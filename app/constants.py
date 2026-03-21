@@ -63,7 +63,7 @@ ART_AND_CRAFT_NAME:str = "art"
 CAFE_NAME:str = "cafe"
 
 SHOPS:tuple = (DALA_SHOP_NAME,ART_AND_CRAFT_NAME,CAFE_NAME)
-TIME_INTERVAL_MINUTE:int = 360
+TIME_INTERVAL_MINUTE:int = 60
 
 DRIVE_SCOPES: list[str] = [
     "https://www.googleapis.com/auth/spreadsheets",

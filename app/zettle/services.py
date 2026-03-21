@@ -3,13 +3,14 @@ import os
 from typing import Any, Sequence
 from uuid import UUID
 from pydantic import ValidationError
+import rich
 from sqlalchemy import Engine
 from app.constants import PREVIOUS_HOUR_INTERVAL_MINUTE, TIME_INTERVAL_MINUTE
 from app.db.schemes import InventoryUpdateRepository
 from app.models.inventory import InventoryUpdateData,InventoryBalanceUpdateValidation, Payload
 from app.models.product import PaypalProductData,ProductData,ListOfPurchases
 from app.zettle.data_fetchers import ProductDataFetcher, PurchasesFetcher
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from app.db.models import InventoryBalanceUpdateModel
 from app.utils import PaypalTokenData, any_to_sweden_time
 
@@ -157,8 +158,10 @@ class InventoryManualDataCollector:
         self.purchase_fetcher:PurchasesFetcher = PurchasesFetcher(token_data=self.paypal_token)
         self.repo_updater:InventoryUpdateRepository = repo_updater
         self._purchases_joined_joined:dict[frozenset[UUID], int] = {}
-        self.start_date: datetime = utc_time - (timedelta(minutes=PREVIOUS_HOUR_INTERVAL_MINUTE) + timedelta(minutes=TIME_INTERVAL_MINUTE))
-        self.end_date:datetime =  utc_time -  timedelta(minutes=PREVIOUS_HOUR_INTERVAL_MINUTE)
+        self.start_date: datetime = datetime.strptime("2026-03-21 11:14:02+0000","%Y-%m-%d %H:%M:%S%z").astimezone(timezone.utc)
+        self.end_date: datetime = datetime.strptime("2026-03-21 14:07:40+0000","%Y-%m-%d %H:%M:%S%z").astimezone(timezone.utc)
+        # self.start_date: datetime = utc_time - (timedelta(minutes=PREVIOUS_HOUR_INTERVAL_MINUTE) + timedelta(minutes=TIME_INTERVAL_MINUTE))
+        # self.end_date:datetime =  utc_time -  timedelta(minutes=PREVIOUS_HOUR_INTERVAL_MINUTE)
 
     def get_manual_changed_products(self) -> list[PaypalProductData] | None:
         
@@ -169,7 +172,8 @@ class InventoryManualDataCollector:
         #fetch inventory data from database
         inventory_updates: Sequence[InventoryBalanceUpdateModel] = self.repo_updater.fetch_data_by_date_interval(
             start_date=any_to_sweden_time(self.start_date),
-            end_date=any_to_sweden_time(self.end_date))
+            end_date=any_to_sweden_time(self.end_date),
+            organization_id=organization_id)
         
         if not inventory_updates:
             logger.info(f"other was not any changes for time interval start:'{any_to_sweden_time(self.start_date)}', end:'{any_to_sweden_time(self.end_date)}'")
@@ -203,7 +207,10 @@ class InventoryManualDataCollector:
         )
 
         manual_changes: dict[tuple[UUID,UUID], InventoryUpdateData] = inventory_manual_checker.get_manual_changes()
-
+        if not manual_changes:
+            logger.info(f"there is not manual changes for time interval start:'{any_to_sweden_time(self.start_date)}', end:'{any_to_sweden_time(self.end_date)}'")
+            return None
+        
         # get product data for manual changes
         product_data_fetcher:ProductDataFetcher = ProductDataFetcher(token_data=self.paypal_token) 
         product_data_manual = ManualProductData(
