@@ -19,9 +19,6 @@ def get_drive_credentials() -> Credentials:
     TOKEN_PATH: str = os.path.abspath(
         path=os.path.join(BASE_DIR, "../../app/creds/google/token.json")
     )
-    CREDS_PATH:str = os.path.abspath(
-        path=os.path.join(BASE_DIR, "../../app/creds/google/credentials.json")
-    )
     creds: Credentials | ExternalAccountAuthorized | None = None
 
     if os.path.exists(path=TOKEN_PATH):
@@ -36,17 +33,28 @@ def get_drive_credentials() -> Credentials:
             creds.refresh(request=Request())
             with open(TOKEN_PATH, "w") as token:
                 token.write(creds.to_json())  # type: ignore
-        if not creds:
-            flow: InstalledAppFlow = InstalledAppFlow.from_client_secrets_file(
-                client_secrets_file=CREDS_PATH, scopes=DRIVE_SCOPES
-            )
-            creds = flow.run_local_server(port=0)
-            # Save the credentials for the next run
-            with open(file=TOKEN_PATH, mode="w") as token:
-                token.write(creds.to_json())
-
-        else:
-            raise ValueError("google Token is not valid")
+        elif not creds:
+            raise ValueError("google Token file not exist")
     return creds  # type: ignore
 
+
+def make_google_token_file() -> Credentials:
+    logger.info("getting google drive credentials")
+    BASE_DIR: str = os.path.dirname(os.path.abspath(path=__file__))
+    TOKEN_PATH: str = os.path.abspath(
+        path=os.path.join(BASE_DIR, "../../app/creds/google/token.json")
+    )
+    CREDS_PATH:str = os.path.abspath(
+        path=os.path.join(BASE_DIR, "../../app/creds/google/credentials.json")
+    )
+    creds: Credentials | ExternalAccountAuthorized | None = None
+
+    flow: InstalledAppFlow = InstalledAppFlow.from_client_secrets_file(
+        client_secrets_file=CREDS_PATH, scopes=DRIVE_SCOPES
+    )
+    creds = flow.run_local_server(port=0)
+    # Save the credentials for the next run
+    with open(file=TOKEN_PATH, mode="w") as token:
+        token.write(creds.to_json())
+    return creds  # type: ignore
 
