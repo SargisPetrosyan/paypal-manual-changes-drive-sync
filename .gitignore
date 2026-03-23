@@ -8,6 +8,7 @@ dist/
 *.egg-info/
 *.egg
 *.db
+*.md
 
 # Testing & Coverage
 .pytest_cache/
