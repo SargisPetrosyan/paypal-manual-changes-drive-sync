@@ -18,7 +18,7 @@ class  InventoryUpdateRepository():
         with Session(bind=self.engine) as session:
             statement: SelectOfScalar[InventoryBalanceUpdateModel] = select(InventoryBalanceUpdateModel) \
                 .where(
-                    InventoryBalanceUpdateModel.timestamp > start_date,
+                    InventoryBalanceUpdateModel.timestamp >= start_date,
                     InventoryBalanceUpdateModel.timestamp < end_date,
                     InventoryBalanceUpdateModel.shop_id == uuid.UUID(hex=organization_id))
             

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 from typing import Any
 import httpx
@@ -17,12 +17,12 @@ class PurchasesFetcher:
 
     def get_purchases(self,start_date:datetime, end_date:datetime, descending: bool = False) -> dict[Any,Any]:
         logger.info(msg=f'get purchases by interval')
-
+        end_date_foamed: datetime = end_date - timedelta(microseconds=1) #to not include same result twice
         response: httpx.Response = httpx.get(
             url='https://purchase.izettle.com/purchases/v2',
             params = {
                 "startDate":start_date.isoformat(),
-                "endDate":end_date.isoformat(),
+                "endDate":end_date_foamed.isoformat(),
                 "descending":descending
             },
             headers={

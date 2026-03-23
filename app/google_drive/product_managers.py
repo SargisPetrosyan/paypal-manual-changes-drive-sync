@@ -1,5 +1,4 @@
 from typing import List
-from fastapi.responses import JSONResponse
 from gspread import Cell, ValueRange, Worksheet
 
 from app.constants import (

@@ -2,7 +2,6 @@ from datetime import  datetime, timedelta
 import json
 import logging
 from typing import Any
-from fastapi import Request
 from gspread.worksheet import JSONResponse
 import httpx
 import pytz
@@ -16,6 +15,7 @@ from app.constants import (
     PAYPAL_HEADERS,
     SHOP_SUBSCRIPTION_EVENTS,
     SWEDEN_TIMEZONE_NAME,
+    TIME_INTERVAL_HOUR,
     WEBHOOK_ENDPOINT_NAME)
 from app.google_drive.client import GoogleDriveClient, SpreadSheetClient
 from app.google_drive.drive_manager import GoogleDriveFileManager
@@ -112,14 +112,6 @@ class OrganizationsNameMappedId:
             raise TypeError("organization uuid is missing")
         return organization_name
 
-async def json_to_dict(request:Request)-> dict:
-    body: bytes = await request.body()
-    data = json.loads(body)
-    data["payload"] = json.loads(data["payload"])
-    return data
-
-
-
 def get_folder_id_by_shop_id(shop_id:str):
     dala_shop_organization_id: str = os.environ['DALA_ORGANIZATION_UUID']
     art_shop_organization_id: str = os.environ['ART_ORGANIZATION_UUID']
@@ -155,6 +147,12 @@ def if_paypal_token_valid(expiration_date:datetime) -> bool:
     else:
         return True
     
+class PreviewsHourWindow:
+    def __init__(self,date:datetime) -> None:
+        formatted: datetime = date.replace(minute=0,second=0,microsecond=0)
+        self.start_date: datetime = formatted - timedelta(hours=TIME_INTERVAL_HOUR)
+        self.end_date: datetime = formatted 
+
 
 class PaypalTokenData:
     def __init__(self, shop_name: str) :

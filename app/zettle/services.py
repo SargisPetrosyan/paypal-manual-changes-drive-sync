@@ -3,16 +3,13 @@ import os
 from typing import Any, Sequence
 from uuid import UUID
 from pydantic import ValidationError
-import rich
-from sqlalchemy import Engine
-from app.constants import PREVIOUS_HOUR_INTERVAL_MINUTE, TIME_INTERVAL_MINUTE
 from app.db.schemes import InventoryUpdateRepository
-from app.models.inventory import InventoryUpdateData,InventoryBalanceUpdateValidation, Payload
+from app.models.inventory import InventoryUpdateData
 from app.models.product import PaypalProductData,ProductData,ListOfPurchases
 from app.zettle.data_fetchers import ProductDataFetcher, PurchasesFetcher
 from datetime import datetime, timedelta, timezone
 from app.db.models import InventoryBalanceUpdateModel
-from app.utils import PaypalTokenData, any_to_sweden_time
+from app.utils import PaypalTokenData, PreviewsHourWindow, any_to_sweden_time
 
 import logging
 
@@ -157,11 +154,12 @@ class InventoryManualDataCollector:
         self.paypal_token = PaypalTokenData(shop_name=self.shop_name)
         self.purchase_fetcher:PurchasesFetcher = PurchasesFetcher(token_data=self.paypal_token)
         self.repo_updater:InventoryUpdateRepository = repo_updater
+        self.time_interval  = PreviewsHourWindow(date=utc_time)
         self._purchases_joined_joined:dict[frozenset[UUID], int] = {}
         # self.start_date: datetime = datetime.strptime("2026-03-21 11:14:02+0000","%Y-%m-%d %H:%M:%S%z").astimezone(timezone.utc)
         # self.end_date: datetime = datetime.strptime("2026-03-21 14:07:40+0000","%Y-%m-%d %H:%M:%S%z").astimezone(timezone.utc)
-        self.start_date: datetime = utc_time - (timedelta(minutes=PREVIOUS_HOUR_INTERVAL_MINUTE) + timedelta(minutes=TIME_INTERVAL_MINUTE))
-        self.end_date:datetime =  utc_time -  timedelta(minutes=PREVIOUS_HOUR_INTERVAL_MINUTE)
+        self.start_date: datetime = self.time_interval.start_date
+        self.end_date:datetime =  self.time_interval.end_date
 
     def get_manual_changed_products(self) -> list[PaypalProductData] | None:
         
