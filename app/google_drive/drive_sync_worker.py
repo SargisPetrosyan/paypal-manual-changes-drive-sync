@@ -1,7 +1,6 @@
 import logging
 import time
 
-import rich
 from sqlalchemy import Engine
 from app.constants import  SHOPS
 from app.core.config import Database
