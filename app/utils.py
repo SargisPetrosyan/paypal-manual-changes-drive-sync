@@ -141,12 +141,6 @@ def any_to_sweden_time(date:datetime) -> datetime:
     sweden_time: datetime = date.astimezone(pytz.timezone(SWEDEN_TIMEZONE_NAME))
     return sweden_time
     
-def if_paypal_token_valid(expiration_date:datetime) -> bool:
-    if datetime.now() > expiration_date:
-        return False
-    else:
-        return True
-    
 class PreviewsHourWindow:
     def __init__(self,date:datetime) -> None:
         formatted: datetime = date.replace(minute=0,second=0,microsecond=0)
@@ -173,10 +167,6 @@ class PaypalTokenData:
         response.raise_for_status()
 
         formatted_data = response.json()
-
-        self.expiration_date = os.environ[f"{ self.shop_name.upper()}_ACCESS_KEY_EXPIATION_DATE"] = str(datetime.now() + timedelta(
-            seconds=formatted_data["expires_in"]
-        ))
 
         return formatted_data['access_token']
 
