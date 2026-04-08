@@ -13,7 +13,10 @@ class  InventoryUpdateRepository():
     def __init__(self,engine) -> None:
         self.engine: Engine  = engine
         
-    def fetch_data_by_date_interval(self,start_date:datetime, end_date:datetime, organization_id: str) -> Sequence[InventoryBalanceUpdateModel]:
+    def fetch_data_by_date_interval(
+            self,start_date:datetime, 
+            end_date:datetime, 
+            organization_id: str) -> Sequence[InventoryBalanceUpdateModel]:
         logger.info("get update data from database ")
         with Session(bind=self.engine) as session:
             statement: SelectOfScalar[InventoryBalanceUpdateModel] = select(InventoryBalanceUpdateModel) \

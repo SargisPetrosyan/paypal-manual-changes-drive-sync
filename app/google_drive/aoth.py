@@ -1,5 +1,7 @@
 import os.path
+from sys import exception
 from app.constants import DRIVE_SCOPES
+from google.auth.exceptions import RefreshError
 
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -33,10 +35,15 @@ class DriveCredentialsGetter:
         if not creds or not creds.valid:
             if creds and creds.expired and creds.refresh_token:
                 logger.warning("cred was expired getting new token")
-                creds.refresh(request=Request())
+                try:
+                    creds.refresh(request=Request())
+                except RefreshError:
+                    logger.info('token was expired or revoked')
+                    raise RefreshError()
                 with open(TOKEN_PATH, "w") as token:
                     token.write(creds.to_json())  # type: ignore
             elif not creds:
+                logger.info('google Token file not exist')
                 raise ValueError("google Token file not exist")
         logger.info("token file is up to date")
         return creds  # type: ignore

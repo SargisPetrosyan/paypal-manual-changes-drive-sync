@@ -7,9 +7,10 @@ from app.db.schemes import InventoryUpdateRepository
 from app.models.inventory import InventoryUpdateData
 from app.models.product import PaypalProductData,ProductData,ListOfPurchases
 from app.zettle.data_fetchers import ProductDataFetcher, PurchasesFetcher
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from app.db.models import InventoryBalanceUpdateModel
 from app.utils import PaypalTokenData, PreviewsHourWindow, any_to_sweden_time
+
 
 import logging
 
@@ -156,8 +157,6 @@ class InventoryManualDataCollector:
         self.repo_updater:InventoryUpdateRepository = repo_updater
         self.time_interval  = PreviewsHourWindow(date=utc_time)
         self._purchases_joined_joined:dict[frozenset[UUID], int] = {}
-        # self.start_date: datetime = datetime.strptime("2026-03-21 11:14:02+0000","%Y-%m-%d %H:%M:%S%z").astimezone(timezone.utc)
-        # self.end_date: datetime = datetime.strptime("2026-03-21 14:07:40+0000","%Y-%m-%d %H:%M:%S%z").astimezone(timezone.utc)
         self.start_date: datetime = self.time_interval.start_date
         self.end_date:datetime =  self.time_interval.end_date
 
@@ -191,8 +190,8 @@ class InventoryManualDataCollector:
         try:
             validate_purchases:ListOfPurchases = ListOfPurchases.model_validate(obj=purchases)
         except ValidationError:
-            logger.critical("purchases can't pass validation") 
-            raise
+            logger.critical("purchases validation problem") 
+            raise ValidationError("purchases validation problem")
         
         purchases_data_merged: dict[tuple[UUID,UUID], int] = purchases_joiner.join_purchase_update_data(purchases=validate_purchases)
 
