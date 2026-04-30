@@ -71,7 +71,7 @@ class YearFolderExistenceEnsurer:
             )
 
             logger.info(
-                f"monthly_report_spreadsheet, rename template names from 'WORKSHEET_SAMPLE_NAME to {context.name.monthly_report_file_name}'"
+                f"monthly_report_spreadsheet, rename template names from 'WORKSHEET_SAMPLE_NAME to {context.name.month_worksheet_name}'"
             )
 
             worksheet = monthly_report_spreadsheet.worksheet(
