@@ -65,7 +65,7 @@ class YearFolderExistenceEnsurer:
             monthly_report_spreadsheet: Spreadsheet = (
                 self.spreadsheet_file_manager.copy_spreadsheet(
                     spreadsheet_id=MONTHLY_TEMPLATE_ID,
-                    title=context.name.monthly_report_file_name,
+                    title=context.name.month_worksheet_name,
                     folder_id=year_folder_id,
                 )
             )
