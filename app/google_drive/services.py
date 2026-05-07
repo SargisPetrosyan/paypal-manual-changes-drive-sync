@@ -128,12 +128,6 @@ class DaySpreadsheetExistenceEnsurer:
                 year_folder_id=context.year_folder_id,
             )
 
-            self.spreadsheet_file_manager.create_worksheet(
-                worksheet_name=context.name.day_worksheet_name,
-                templates_spreadsheet_id=DALASHOP_FOLDER_ID,
-                spreadsheet=spreadsheet,
-            )
-
             context.day_spreadsheet_id = spreadsheet.id
             return spreadsheet
         spreadsheet: Spreadsheet = self.spreadsheet_file_manager.get_spreadsheet(
