@@ -1,32 +1,37 @@
 name: Deploy to Azure container app jobs
 
 on:
-  push:
-    branches: [main]
+    push:
+        branches: [main]
 
 env:
-  AZURE_CONTAINER_REGISTERY: paypalcontainerregistery
-  CONTAIENR_APP_NAME: drive-data-sync
-  REGISTERY_GROUP: paypal
+    AZURE_CONTAINER_REGISTERY: paypalcontainerregistery
+    CONTAIENR_APP_NAME: drive-data-sync
+    REGISTERY_GROUP: paypal
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+    build-and-deploy:
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Log in to Azure
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+        steps:
+        - name: List files
+          run: -ls la
+        - name: Checkout code
+          uses: actions/checkout@v3
 
-      - name: Build image
-        run: |
-          docker build --platform=linux/amd64 -t paypalcontainerregistery.azurecr.io/drive_product_sync:${{ github.sha }} .
-          docker push paypalcontainerregistery.azurecr.io/drive_product_sync:${{ github.sha }}
+        - name: Log in to Azure
+          uses: azure/login@v1
+          with:
+              creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Update job image
-        run: |
-          az containerapp job update \
-            --name drive-data-sync \
-            --resource-group paypal \
-            --image paypalcontainerregistery.azurecr.io/drive_product_sync:${{ github.sha }}
+        - name: Build and push image
+          run: |
+              docker build --platform=linux/amd64 -t paypalcontainerregistery.azurecr.io/drive_product_sync:${{ github.sha }} .
+              docker push paypalcontainerregistery.azurecr.io/drive_product_sync:${{ github.sha }}
+
+        - name: Update job image
+          run: |
+              az containerapp job update \
+                  --name drive-data-sync \
+                  --resource-group paypal \
+                  --image paypalcontainerregistery.azurecr.io/drive_product_sync:${{ github.sha }}
