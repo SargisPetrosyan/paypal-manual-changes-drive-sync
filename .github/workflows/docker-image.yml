@@ -1,4 +1,4 @@
-name: Deploy to Azure ontainer app jobs
+name: Deploy to Azure container app jobs
 
 on:
   push:
