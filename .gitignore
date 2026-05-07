@@ -50,7 +50,7 @@ app/creds/zettle/*
 !app/creds/zettle/.gitkeep
 .env
 .env.local
-*.yaml
+app.yaml
 
 # Data files (local/temporary)
 data/
