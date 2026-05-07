@@ -2,7 +2,7 @@ name: Deploy to Azure ontainer app jobs
 
 on:
   push:
-    branches: [master]
+    branches: [main]
 
 env:
   AZURE_CONTAINER_REGISTERY: paypalcontainerregistery
