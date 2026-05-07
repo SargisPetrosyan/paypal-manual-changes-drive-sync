@@ -15,7 +15,7 @@ jobs:
 
         steps:
         - name: List files
-          run: -ls la
+          run: ls -la
         - name: Checkout code
           uses: actions/checkout@v3
 
