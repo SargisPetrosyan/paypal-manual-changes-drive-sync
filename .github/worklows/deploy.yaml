@@ -1,0 +1,32 @@
+name: Deploy to Azure ontainer app jobs
+
+on:
+  push:
+    branches: [master]
+
+env:
+  AZURE_CONTAINER_REGISTERY: paypalcontainerregistery
+  CONTAIENR_APP_NAME: drive-data-sync
+  REGISTERY_GROUP: paypal
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Build image
+        run: |
+          docker build --platform=linux/amd64 -t paypalcontainerregistery.azurecr.io/drive_product_sync:${{ github.sha }} .
+          docker push paypalcontainerregistery.azurecr.io/drive_product_sync:${{ github.sha }}
+
+      - name: Update job image
+        run: |
+          az containerapp job update \
+            --name drive-data-sync \
+            --resource-group paypal \
+            --image paypalcontainerregistery.azurecr.io/drive_product_sync:${{ github.sha }}
