@@ -5,6 +5,7 @@ load_dotenv()
 PAGE_SIZE_FOR_LIST_FILES: int = 100
 
 # names
+GOOGLE_SERVICE_ACCOUNT_FILE_PATH:str = "app/creds/google/service_account.json"
 WORKSHEET_SAMPLE_COPY_NAME: str = "Copy of WORKSHEET_SAMPLE"
 WORKSHEET_SAMPLE_NAME: str = "WORKSHEET_SAMPLE"
 DALASHOP_FOLDER_NAME: str = "DALASHOP"

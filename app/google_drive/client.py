@@ -2,6 +2,9 @@ from typing import Any, Optional
 import gspread
 import os
 import logging
+from google.oauth2 import service_account
+from app.constants import DRIVE_SCOPES, GOOGLE_SERVICE_ACCOUNT_FILE_PATH
+
 from google.oauth2.credentials import Credentials
 from dotenv import load_dotenv
 from gspread.spreadsheet import Spreadsheet
@@ -17,10 +20,11 @@ load_dotenv()
 root: str | None = os.getenv(key="ROOT_FOLDER_ID")
 
 class GoogleDriveClient:
-    def __init__(self, creds:Credentials) -> None:
+    def __init__(self, ) -> None:
         try:
+            credentials: service_account.Credentials = service_account.Credentials.from_service_account_file(filename=GOOGLE_SERVICE_ACCOUNT_FILE_PATH)
             self._client: Any = build(
-                serviceName="drive", version="v3", credentials=creds
+                serviceName="drive", version="v3", credentials=credentials
             )
             logger.info("google drive client was created")
         except HttpError as error:
@@ -49,11 +53,6 @@ class GoogleDriveClient:
             )
             .execute()
         )
-
-    def delete(self, file_id: str) -> dict:
-        """Delete drive file by id"""
-        return self._client.files().delete(fileId=file_id).execute()
-
     def get(self, file_id: str) -> dict:
         return (
             self._client.files()
@@ -76,8 +75,9 @@ class GoogleDriveClient:
         return self._client.about().get(fields="storageQuota").execute()
 
 class SpreadSheetClient:
-    def __init__(self,creds:Credentials) -> None:
+    def __init__(self) -> None:
         try:
+            creds: service_account.Credentials = service_account.Credentials.from_service_account_file(filename=GOOGLE_SERVICE_ACCOUNT_FILE_PATH,scopes=DRIVE_SCOPES)
             self._client: gspread.Client = gspread.authorize(credentials=creds)
             logger.info("'SpreadSheetClient' was create successfully")
         except HttpError as error:

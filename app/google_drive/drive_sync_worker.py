@@ -5,7 +5,6 @@ from sqlalchemy import Engine
 from app.constants import  SHOPS
 from app.core.config import Database
 from app.db.schemes import InventoryUpdateRepository
-from app.google_drive.aoth import DriveCredentialsGetter
 from app.google_drive.client import GoogleDriveClient, SpreadSheetClient
 from app.google_drive.context import Context
 from app.google_drive.drive_remote_updater import DriveSpreadsheetUpdater
@@ -24,9 +23,8 @@ class HourlyWorkflowRunner:
         self.engine: Engine = database.engine
         self.utc_time: datetime.datetime = time
         self.shops: tuple[str, str, str]= SHOPS
-        self.google_creds = DriveCredentialsGetter()
-        self.google_drive_client = GoogleDriveClient(creds=self.google_creds.creds)
-        self.spreadsheet_file_client = SpreadSheetClient(creds=self.google_creds.creds)
+        self.google_drive_client = GoogleDriveClient()
+        self.spreadsheet_file_client = SpreadSheetClient()
         self.google_drive_file_manager = GoogleDriveFileManager(client=self.google_drive_client)
         self.spreadsheet_manager = SpreadSheetFileManager(client=self.spreadsheet_file_client)
 
