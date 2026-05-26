@@ -1,11 +1,16 @@
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
+
+BASE_DIR: str = os.path.dirname(os.path.abspath(path=__file__))
 
 PAGE_SIZE_FOR_LIST_FILES: int = 100
 
 # names
-GOOGLE_SERVICE_ACCOUNT_FILE_PATH:str = "app/creds/google/service_account.json"
+GOOGLE_SERVICE_ACCOUNT_FILE_PATH:str = os.path.abspath(
+        path=os.path.join(BASE_DIR, "creds/google/service_account.json")
+    )
 WORKSHEET_SAMPLE_COPY_NAME: str = "Copy of WORKSHEET_SAMPLE"
 WORKSHEET_SAMPLE_NAME: str = "WORKSHEET_SAMPLE"
 DALASHOP_FOLDER_NAME: str = "DALASHOP"
